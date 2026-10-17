@@ -1,0 +1,42 @@
+{
+  "name": "hexo-generator-custom-sitemap",
+  "version": "1.0.0",
+  "description": "Customizable sitemap generator for Hexo with exclude paths/files and extra_urls support.",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "lib",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md",
+    "LICENSES",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "keywords": [
+    "hexo",
+    "sitemap",
+    "seo",
+    "generator",
+    "exclude",
+    "extra-urls"
+  ],
+  "license": "MIT",
+  "author": "hexo-generator-custom-sitemap contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YueXia-DeLiSha/hexo-generator-custom-sitemap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YueXia-DeLiSha/hexo-generator-custom-sitemap/issues"
+  },
+  "homepage": "https://github.com/YueXia-DeLiSha/hexo-generator-custom-sitemap#readme",
+  "engines": {
+    "node": ">=14"
+  },
+  "hexo": {
+    "version": ">=4.0.0"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
