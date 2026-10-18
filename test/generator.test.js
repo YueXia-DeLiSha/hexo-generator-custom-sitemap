@@ -66,9 +66,10 @@ test('home page can be excluded by /', () => {
   assert.strictEqual(matchExclude('/', ['/']), true);
 });
 
-test('siteBase keeps subdirectory root', () => {
+test('siteBase keeps subdirectory root and trims slashes', () => {
   assert.strictEqual(siteBase({ url: 'https://example.com', root: '/' }), 'https://example.com');
   assert.strictEqual(siteBase({ url: 'https://example.com/', root: '/blog/' }), 'https://example.com/blog');
+  assert.strictEqual(siteBase({ url: 'https://example.com///', root: 'blog///' }), 'https://example.com/blog');
 });
 
 test('joinUrl handles paths, files and absolute urls', () => {
@@ -77,6 +78,11 @@ test('joinUrl handles paths, files and absolute urls', () => {
   assert.strictEqual(joinUrl(base, '/xxx'), 'https://example.com/xxx');
   assert.strictEqual(joinUrl(base, '/xxx.html'), 'https://example.com/xxx.html');
   assert.strictEqual(joinUrl(base, 'https://other.com/a'), 'https://other.com/a');
+
+  const sub = siteBase({ url: 'https://example.com/', root: '/blog/' });
+  assert.strictEqual(sub, 'https://example.com/blog');
+  assert.strictEqual(joinUrl(sub, 'sitemap-1.xml'), 'https://example.com/blog/sitemap-1.xml');
+  assert.strictEqual(joinUrl(sub, '/sitemap-1.xml'), 'https://example.com/blog/sitemap-1.xml');
 });
 
 test('generator filters and appends urls end to end', () => {
@@ -333,7 +339,7 @@ test('0 urls with slicing enabled warns and generates nothing', () => {
 test('sitemap index loc is absolute and includes the subdirectory root', () => {
   const hexo = createHexo(
     { include_home: false, sitemap_index: true, sitemap_index_size: 1 },
-    { url: 'https://example.com', root: '/blog/' }
+    { url: 'https://example.com/', root: '/blog/' }
   );
   const result = hexo.extend.generator.fn({
     posts: query([{ path: 'p/', permalink: 'https://example.com/blog/p/' }]),
@@ -347,4 +353,16 @@ test('sitemap index loc is absolute and includes the subdirectory root', () => {
 
   assert.match(index.data, /<loc>https:\/\/example\.com\/blog\/sitemap-1\.xml<\/loc>/);
   assert.match(slice.data, /<loc>https:\/\/example\.com\/blog\/p\/<\/loc>/);
+});
+
+test('warns when hexo.config.url is missing', () => {
+  const hexo = createHexo({ include_home: false }, { url: '', root: '/' });
+  hexo.extend.generator.fn({
+    posts: query([{ path: 'p/', permalink: '/p/' }]),
+    pages: query([]),
+    tags: query([]),
+    categories: query([])
+  });
+
+  assert.match(hexo.logs.warn.join('\n'), /未配置 hexo\.config\.url/);
 });
