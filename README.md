@@ -9,6 +9,14 @@ sitemap plugins that dump every route into the file, this one lets you:
 - **add** paths, files and external websites with an `extra_urls` array
 - toggle pages, tags and categories independently
 
+## Compatibility
+
+- Node.js **>= 18**
+- Hexo **>= 7.0.0**
+- Tested with Hexo 7.3.0 on Node.js 24
+
+Hexo 7 itself requires Node.js 18 or newer, so the two requirements go together.
+
 ## Install
 
 ```bash

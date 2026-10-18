@@ -32,10 +32,10 @@
   },
   "homepage": "https://github.com/YueXia-DeLiSha/hexo-generator-custom-sitemap#readme",
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "hexo": {
-    "version": ">=4.0.0"
+    "version": ">=7.0.0"
   },
   "scripts": {
     "test": "node --test"
