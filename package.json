@@ -1,6 +1,6 @@
 {
   "name": "hexo-generator-custom-sitemap",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Customizable sitemap generator for Hexo with exclude paths/files and extra_urls support.",
   "main": "index.js",
   "files": [
