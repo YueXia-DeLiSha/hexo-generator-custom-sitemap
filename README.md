@@ -122,6 +122,18 @@ give every post the same mtime, producing a uniform `<lastmod>`. `auto` avoids
 this by falling back to each post's real `date`, while still honoring an explicit
 `updated:` field in the front matter.
 
+## Log output
+
+After generation the plugin prints a summary:
+
+```text
+[hexo-generator-custom-sitemap] Sitemap 已生成: 32 个 URL（含 extra_urls）  -> sitemap.xml | by yuexia-delisha
+```
+
+The count is exactly the number of URLs written to the sitemap: site entries
+after `exclude`, **plus** `extra_urls`. If the count is `0`, a warning with a
+troubleshooting checklist is printed instead.
+
 ## Output
 
 ```xml

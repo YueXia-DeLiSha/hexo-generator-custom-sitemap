@@ -118,6 +118,17 @@ Hexo 默认 `updated_option: mtime`，当文章文件被批量复制或恢复时
 修改时间会相同，导致 `<lastmod>` 全部一样。`auto` 会回退到每篇文章真实的
 `date`，同时仍会识别 front-matter 中显式写的 `updated:`。
 
+## 日志输出
+
+生成完成后会输出统计信息：
+
+```text
+[hexo-generator-custom-sitemap] Sitemap 已生成: 32 个 URL（含 extra_urls）  -> sitemap.xml | by yuexia-delisha
+```
+
+统计口径：写入地图的 URL 总数 = 应用 `exclude` 后的站内条目 **+** `extra_urls`。
+当数量为 `0` 时会输出 `WARN` 警告，并附带排查清单。
+
 ## 输出示例
 
 ```xml

@@ -13,11 +13,17 @@ function query(items) {
 function createHexo(sitemap) {
   const config = { url: 'https://example.com', root: '/' };
   if (sitemap !== undefined) config.sitemap = sitemap;
+  const logs = { info: [], warn: [] };
   const hexo = {
     config: config,
+    log: {
+      info: function (message) { logs.info.push(message); },
+      warn: function (message) { logs.warn.push(message); }
+    },
     extend: { generator: { register: function (name, fn) { this.fn = fn; } } }
   };
   generator(hexo);
+  hexo.logs = logs;
   return hexo;
 }
 
@@ -187,4 +193,37 @@ test('auto falls back to date when updated comes from file mtime', () => {
 
   assert.strictEqual(resolveLastmod('auto', { source_dir: dir }, post), post.date);
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('logs the generated URL count including extra_urls', () => {
+  const hexo = createHexo({ extra_urls: ['https://external.example/page'] });
+  hexo.extend.generator.fn({
+    posts: query([{ path: 'p/', permalink: 'https://example.com/p/' }]),
+    pages: query([]),
+    tags: query([]),
+    categories: query([])
+  });
+
+  assert.strictEqual(hexo.logs.info.length, 1);
+  assert.strictEqual(hexo.logs.warn.length, 0);
+  assert.match(hexo.logs.info[0], /Sitemap 已生成: 3 个 URL（含 extra_urls）/);
+  assert.match(hexo.logs.info[0], /-> sitemap\.xml/);
+  assert.match(hexo.logs.info[0], /by yuexia-delisha/);
+});
+
+test('warns with a troubleshooting checklist when no URL is generated', () => {
+  const hexo = createHexo({ include_home: false, extra_urls: [] });
+  hexo.extend.generator.fn({
+    posts: query([]),
+    pages: query([]),
+    tags: query([]),
+    categories: query([])
+  });
+
+  assert.strictEqual(hexo.logs.info.length, 0);
+  assert.strictEqual(hexo.logs.warn.length, 1);
+  assert.match(hexo.logs.warn[0], /0 个 URL（含 extra_urls）/);
+  assert.match(hexo.logs.warn[0], /排查清单/);
+  assert.match(hexo.logs.warn[0], /sitemap\.status/);
+  assert.match(hexo.logs.warn[0], /extra_urls/);
 });
