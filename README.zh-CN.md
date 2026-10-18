@@ -97,10 +97,26 @@ exclude: "/tag, /404.html"
 ```yaml
 sitemap:
   include_home: true        # 是否收录首页（默认 true）
-  lastmod: true             # 是否输出 <lastmod>（默认 true）
+  lastmod: auto             # 更新时间来源（默认 auto）
   changefreq: false         # 例如 daily
   priority: false           # 例如 "0.8"
 ```
+
+#### lastmod
+
+`lastmod` 控制每个 URL 的 `<lastmod>` 取值：
+
+| 值               | 含义                                                          |
+| ---------------- | ------------------------------------------------------------- |
+| `auto`（默认）   | 优先使用 front-matter 中显式的 `updated`；如果 `updated` 只是文件修改时间，则回退到文章 `date`。 |
+| `updated` / `true` | 使用 Hexo 的 `post.updated`（可能是文件修改时间）。         |
+| `date`           | 全部使用文章 `date`。                                          |
+| `mtime`          | 强制使用源文件修改时间。                                       |
+| `false`          | 不输出 `<lastmod>`。                                           |
+
+Hexo 默认 `updated_option: mtime`，当文章文件被批量复制或恢复时，所有文章的
+修改时间会相同，导致 `<lastmod>` 全部一样。`auto` 会回退到每篇文章真实的
+`date`，同时仍会识别 front-matter 中显式写的 `updated:`。
 
 ## 输出示例
 

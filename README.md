@@ -100,10 +100,27 @@ Each item may be a path, a file, or a fully qualified website URL.
 ```yaml
 sitemap:
   include_home: true        # include the home page (default: true)
-  lastmod: true             # include <lastmod> (default: true)
+  lastmod: auto             # lastmod source (default: auto)
   changefreq: false         # e.g. daily
   priority: false           # e.g. "0.8"
 ```
+
+#### lastmod
+
+`lastmod` controls the `<lastmod>` value of each URL:
+
+| Value            | Meaning                                                        |
+| ---------------- | -------------------------------------------------------------- |
+| `auto` (default) | Use an explicit `updated` front matter; if `updated` is just the file mtime, fall back to the post `date`. |
+| `updated` / `true` | Use Hexo's `post.updated` (may be the file mtime).           |
+| `date`           | Use the post's `date` for every entry.                          |
+| `mtime`          | Force the source file modification time.                        |
+| `false`          | Do not output `<lastmod>`.                                      |
+
+With Hexo's default `updated_option: mtime`, copying or restoring post files can
+give every post the same mtime, producing a uniform `<lastmod>`. `auto` avoids
+this by falling back to each post's real `date`, while still honoring an explicit
+`updated:` field in the front matter.
 
 ## Output
 

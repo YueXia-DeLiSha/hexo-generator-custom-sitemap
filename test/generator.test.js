@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const generator = require('../lib/generator');
-const { matchExclude, isFilePath, normalizePath, joinUrl, siteBase, toList } = generator;
+const { matchExclude, isFilePath, normalizePath, joinUrl, siteBase, toList, resolveLastmod } = generator;
 
 function query(items) {
   return { forEach: (fn) => items.forEach(fn) };
@@ -160,4 +160,31 @@ test('external extra_urls with root pathname are not deduped against home', () =
   assert.match(route.data, /<loc>https:\/\/example\.com\/<\/loc>/);
   assert.match(route.data, /<loc>https:\/\/sdvg\.com<\/loc>/);
   assert.match(route.data, /<loc>https:\/\/usduhd\.top<\/loc>/);
+});
+
+test('resolveLastmod supports date, updated and off modes', () => {
+  const post = { date: '2026-01-01T00:00:00.000Z', updated: '2026-02-01T00:00:00.000Z' };
+
+  assert.strictEqual(resolveLastmod('date', {}, post), post.date);
+  assert.strictEqual(resolveLastmod('updated', {}, post), post.updated);
+  assert.strictEqual(resolveLastmod(true, {}, post), post.updated);
+  assert.strictEqual(resolveLastmod(false, {}, post), null);
+});
+
+test('auto falls back to date when updated comes from file mtime', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitemap-'));
+  const file = path.join(dir, 'post.md');
+  fs.writeFileSync(file, 'x');
+  const mtime = fs.statSync(file).mtimeMs;
+  const post = {
+    source: 'post.md',
+    date: '2026-01-01T00:00:00.000Z',
+    updated: new Date(mtime).toISOString()
+  };
+
+  assert.strictEqual(resolveLastmod('auto', { source_dir: dir }, post), post.date);
+  fs.rmSync(dir, { recursive: true, force: true });
 });
