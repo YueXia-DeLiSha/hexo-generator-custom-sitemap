@@ -46,6 +46,8 @@ sitemap:
 | `rel`        | boolean | `true`        | `true` includes regular pages, `false` excludes them.      |
 | `tags`       | boolean | `true`        | `true` includes tag pages, `false` excludes them.          |
 | `categories` | boolean | `true`        | `true` includes category pages, `false` excludes them.     |
+| `sitemap_index` | boolean | `false`    | `true` splits the sitemap into slices and emits an index.  |
+| `sitemap_index_size` | number | `5000` | Maximum URLs per slice (1–50000).                         |
 | `exclude`    | array   | `[]`          | Paths/files to exclude from the sitemap.                  |
 | `extra_urls` | array   | `[]`          | Paths/files/URLs to add to the sitemap.                   |
 
@@ -94,6 +96,24 @@ Each item may be a path, a file, or a fully qualified website URL.
 | `https://xxxx.top`   | Adds the external URL as-is   |
 
 `extra_urls` are explicitly added, so `exclude` is not applied to them.
+
+### Sitemap index (slicing)
+
+Set `sitemap_index: true` to split the sitemap into multiple files:
+
+```yaml
+sitemap:
+  path: sitemap.xml
+  sitemap_index: true
+  sitemap_index_size: 5000
+```
+
+This writes `sitemap-1.xml`, `sitemap-2.xml`, ... and uses `sitemap.xml` as the
+sitemap index (with `<sitemapindex>`). `sitemap_index_size` is the maximum number
+of URLs per slice (default `5000`, clamped to 1–50000).
+
+The feature is off by default (`sitemap_index: false`), so existing sites keep
+the single-file behavior.
 
 ### Optional extras
 

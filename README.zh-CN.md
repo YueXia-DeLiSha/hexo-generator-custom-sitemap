@@ -46,6 +46,8 @@ sitemap:
 | `rel`        | boolean | `true`        | `true` 收录普通页面，`false` 排除。          |
 | `tags`       | boolean | `true`        | `true` 收录标签页，`false` 排除。            |
 | `categories` | boolean | `true`        | `true` 收录分类页，`false` 排除。            |
+| `sitemap_index` | boolean | `false`   | `true` 将地图切片并生成索引文件。            |
+| `sitemap_index_size` | number | `5000` | 每个切片的最大 URL 数（1–50000）。          |
 | `exclude`    | array   | `[]`          | 需要从地图中排除的路径/文件。                |
 | `extra_urls` | array   | `[]`          | 需要追加到地图的路径/文件/网址。             |
 
@@ -91,6 +93,23 @@ exclude: "/tag, /404.html"
 | `https://xxxx.top`   | 按原样追加外部网址            |
 
 `extra_urls` 属于显式追加，因此不会被 `exclude` 过滤。
+
+### 地图切片（sitemap index）
+
+设置 `sitemap_index: true` 即可把地图切成多个文件：
+
+```yaml
+sitemap:
+  path: sitemap.xml
+  sitemap_index: true
+  sitemap_index_size: 5000
+```
+
+开启后会生成 `sitemap-1.xml`、`sitemap-2.xml`……，并把 `path` 指定的文件作为
+sitemap 索引（`<sitemapindex>`）。`sitemap_index_size` 是每个切片的最大 URL 数
+（默认 `5000`，限制在 1–50000）。
+
+该功能默认关闭（`sitemap_index: false`），保持原有的单文件行为。
 
 ### 可选扩展项
 

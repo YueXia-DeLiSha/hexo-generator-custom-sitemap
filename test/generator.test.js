@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const generator = require('../lib/generator');
-const { matchExclude, isFilePath, normalizePath, joinUrl, siteBase, toList, resolveLastmod } = generator;
+const { matchExclude, isFilePath, normalizePath, joinUrl, siteBase, toList, resolveLastmod, slicePathFor } = generator;
 
 function query(items) {
   return { forEach: (fn) => items.forEach(fn) };
@@ -226,4 +226,48 @@ test('warns with a troubleshooting checklist when no URL is generated', () => {
   assert.match(hexo.logs.warn[0], /排查清单/);
   assert.match(hexo.logs.warn[0], /sitemap\.status/);
   assert.match(hexo.logs.warn[0], /extra_urls/);
+});
+
+test('slicePathFor inserts the slice number before the extension', () => {
+  assert.strictEqual(slicePathFor('sitemap.xml', 1), 'sitemap-1.xml');
+  assert.strictEqual(slicePathFor('dir/sitemap.xml', 2), 'dir/sitemap-2.xml');
+  assert.strictEqual(slicePathFor('sitemap', 3), 'sitemap-3.xml');
+});
+
+test('sitemap_index slices urls and writes an index', () => {
+  const hexo = createHexo({
+    include_home: false,
+    sitemap_index: true,
+    sitemap_index_size: 2
+  });
+  const posts = Array.from({ length: 5 }, function (_, i) {
+    return { path: 'p' + i + '/', permalink: 'https://example.com/p' + i + '/', updated: '2026-01-0' + (i + 1) + 'T00:00:00.000Z' };
+  });
+  const result = hexo.extend.generator.fn({
+    posts: query(posts),
+    pages: query([]),
+    tags: query([]),
+    categories: query([])
+  });
+
+  assert.ok(Array.isArray(result));
+  assert.strictEqual(result.length, 4);
+
+  const index = result.find(function (route) { return route.path === 'sitemap.xml'; });
+  const slices = result.filter(function (route) { return route.path !== 'sitemap.xml'; });
+
+  assert.ok(index);
+  assert.match(index.data, /<sitemapindex/);
+  assert.strictEqual(slices.length, 3);
+  assert.match(index.data, /https:\/\/example\.com\/sitemap-1\.xml/);
+  assert.match(index.data, /https:\/\/example\.com\/sitemap-3\.xml/);
+
+  const counts = slices.map(function (route) {
+    return (route.data.match(/<loc>/g) || []).length;
+  });
+  assert.deepStrictEqual(counts, [2, 2, 1]);
+
+  assert.strictEqual(hexo.logs.info.length, 1);
+  assert.match(hexo.logs.info[0], /5 个 URL（含 extra_urls）/);
+  assert.match(hexo.logs.info[0], /共 3 个切片/);
 });
