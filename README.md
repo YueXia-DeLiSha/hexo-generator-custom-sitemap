@@ -110,7 +110,11 @@ sitemap:
 
 This writes `sitemap-1.xml`, `sitemap-2.xml`, ... and uses `sitemap.xml` as the
 sitemap index (with `<sitemapindex>`). `sitemap_index_size` is the maximum number
-of URLs per slice (default `5000`, clamped to 1–50000).
+of URLs per slice (default `5000`). Values outside `1–50000`, or non-numeric
+values, are rejected with a warning and fall back to `5000`.
+
+All `<loc>` values — in both the index and the slice files — are absolute URLs
+built from `hexo.config.url` (plus `root`), as required by the sitemap protocol.
 
 The feature is off by default (`sitemap_index: false`), so existing sites keep
 the single-file behavior.
@@ -152,7 +156,7 @@ After generation the plugin prints a summary:
 
 The count is exactly the number of URLs written to the sitemap: site entries
 after `exclude`, **plus** `extra_urls`. If the count is `0`, a warning with a
-troubleshooting checklist is printed instead.
+troubleshooting checklist is printed and no sitemap file is generated.
 
 ## Output
 

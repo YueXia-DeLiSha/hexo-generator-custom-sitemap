@@ -107,7 +107,10 @@ sitemap:
 
 开启后会生成 `sitemap-1.xml`、`sitemap-2.xml`……，并把 `path` 指定的文件作为
 sitemap 索引（`<sitemapindex>`）。`sitemap_index_size` 是每个切片的最大 URL 数
-（默认 `5000`，限制在 1–50000）。
+（默认 `5000`）。超出 `1–50000` 或非数字的值会输出 WARN，并回退为 `5000`。
+
+索引与切片文件中的所有 `<loc>` 都是由 `hexo.config.url`（加上 `root`）拼出的
+绝对 URL，符合 sitemap 协议的硬性要求。
 
 该功能默认关闭（`sitemap_index: false`），保持原有的单文件行为。
 
@@ -146,7 +149,7 @@ Hexo 默认 `updated_option: mtime`，当文章文件被批量复制或恢复时
 ```
 
 统计口径：写入地图的 URL 总数 = 应用 `exclude` 后的站内条目 **+** `extra_urls`。
-当数量为 `0` 时会输出 `WARN` 警告，并附带排查清单。
+当数量为 `0` 时会输出 `WARN` 警告并附带排查清单，同时跳过生成，不写入任何地图文件。
 
 ## 输出示例
 

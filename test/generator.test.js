@@ -4,14 +4,14 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const generator = require('../lib/generator');
-const { matchExclude, isFilePath, normalizePath, joinUrl, siteBase, toList, resolveLastmod, slicePathFor } = generator;
+const { matchExclude, isFilePath, normalizePath, joinUrl, siteBase, toList, resolveLastmod, slicePathFor, normalizeSliceSize } = generator;
 
 function query(items) {
   return { forEach: (fn) => items.forEach(fn) };
 }
 
-function createHexo(sitemap) {
-  const config = { url: 'https://example.com', root: '/' };
+function createHexo(sitemap, overrides) {
+  const config = Object.assign({ url: 'https://example.com', root: '/' }, overrides || {});
   if (sitemap !== undefined) config.sitemap = sitemap;
   const logs = { info: [], warn: [] };
   const hexo = {
@@ -213,16 +213,18 @@ test('logs the generated URL count including extra_urls', () => {
 
 test('warns with a troubleshooting checklist when no URL is generated', () => {
   const hexo = createHexo({ include_home: false, extra_urls: [] });
-  hexo.extend.generator.fn({
+  const result = hexo.extend.generator.fn({
     posts: query([]),
     pages: query([]),
     tags: query([]),
     categories: query([])
   });
 
+  assert.strictEqual(result, null);
   assert.strictEqual(hexo.logs.info.length, 0);
   assert.strictEqual(hexo.logs.warn.length, 1);
   assert.match(hexo.logs.warn[0], /0 个 URL（含 extra_urls）/);
+  assert.match(hexo.logs.warn[0], /已跳过生成/);
   assert.match(hexo.logs.warn[0], /排查清单/);
   assert.match(hexo.logs.warn[0], /sitemap\.status/);
   assert.match(hexo.logs.warn[0], /extra_urls/);
@@ -270,4 +272,79 @@ test('sitemap_index slices urls and writes an index', () => {
   assert.strictEqual(hexo.logs.info.length, 1);
   assert.match(hexo.logs.info[0], /5 个 URL（含 extra_urls）/);
   assert.match(hexo.logs.info[0], /共 3 个切片/);
+});
+
+test('normalizeSliceSize falls back to 5000 when out of range', () => {
+  assert.deepStrictEqual(normalizeSliceSize(0), { size: 5000, invalid: true });
+  assert.deepStrictEqual(normalizeSliceSize(50001), { size: 5000, invalid: true });
+  assert.deepStrictEqual(normalizeSliceSize('abc'), { size: 5000, invalid: true });
+  assert.deepStrictEqual(normalizeSliceSize(20), { size: 20, invalid: false });
+  assert.deepStrictEqual(normalizeSliceSize('20'), { size: 20, invalid: false });
+});
+
+test('out-of-range sitemap_index_size warns and falls back to 5000', () => {
+  const hexo = createHexo({ include_home: false, sitemap_index: true, sitemap_index_size: 999999 });
+  const result = hexo.extend.generator.fn({
+    posts: query([{ path: 'p/', permalink: 'https://example.com/p/' }]),
+    pages: query([]),
+    tags: query([]),
+    categories: query([])
+  });
+
+  assert.ok(Array.isArray(result));
+  assert.match(hexo.logs.warn.join('\n'), /sitemap_index_size 越界或无效/);
+  assert.match(hexo.logs.warn.join('\n'), /5000/);
+});
+
+test('exact multiple of slice size does not create an empty slice', () => {
+  const hexo = createHexo({ include_home: false, sitemap_index: true, sitemap_index_size: 2 });
+  const posts = Array.from({ length: 4 }, function (_, i) {
+    return { path: 'p' + i + '/', permalink: 'https://example.com/p' + i + '/' };
+  });
+  const result = hexo.extend.generator.fn({
+    posts: query(posts),
+    pages: query([]),
+    tags: query([]),
+    categories: query([])
+  });
+
+  const slices = result.filter(function (route) { return route.path !== 'sitemap.xml'; });
+  assert.strictEqual(slices.length, 2);
+  assert.deepStrictEqual(
+    slices.map(function (route) { return (route.data.match(/<loc>/g) || []).length; }),
+    [2, 2]
+  );
+});
+
+test('0 urls with slicing enabled warns and generates nothing', () => {
+  const hexo = createHexo({ include_home: false, sitemap_index: true });
+  const result = hexo.extend.generator.fn({
+    posts: query([]),
+    pages: query([]),
+    tags: query([]),
+    categories: query([])
+  });
+
+  assert.strictEqual(result, null);
+  assert.strictEqual(hexo.logs.warn.length, 1);
+  assert.match(hexo.logs.warn[0], /已跳过生成/);
+});
+
+test('sitemap index loc is absolute and includes the subdirectory root', () => {
+  const hexo = createHexo(
+    { include_home: false, sitemap_index: true, sitemap_index_size: 1 },
+    { url: 'https://example.com', root: '/blog/' }
+  );
+  const result = hexo.extend.generator.fn({
+    posts: query([{ path: 'p/', permalink: 'https://example.com/blog/p/' }]),
+    pages: query([]),
+    tags: query([]),
+    categories: query([])
+  });
+
+  const index = result.find(function (route) { return route.path === 'sitemap.xml'; });
+  const slice = result.find(function (route) { return route.path === 'sitemap-1.xml'; });
+
+  assert.match(index.data, /<loc>https:\/\/example\.com\/blog\/sitemap-1\.xml<\/loc>/);
+  assert.match(slice.data, /<loc>https:\/\/example\.com\/blog\/p\/<\/loc>/);
 });
